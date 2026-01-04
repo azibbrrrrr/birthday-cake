@@ -20,6 +20,12 @@ import { BirthdayCard } from "./components/BirthdayCard";
 
 import "./App.css";
 
+const isMobileDevice = () => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  ) || window.matchMedia("(max-width: 768px)").matches;
+};
+
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
 
@@ -57,11 +63,11 @@ const CANDLE_DROP_START =
 const totalAnimationTime = CANDLE_DROP_START + CANDLE_DROP_DURATION;
 
 const ORBIT_TARGET = new Vector3(0, 1, 0);
-const ORBIT_INITIAL_RADIUS = 3;
-const ORBIT_INITIAL_HEIGHT = 1;
+const ORBIT_INITIAL_RADIUS = 5;
+const ORBIT_INITIAL_HEIGHT = 1.5;
 const ORBIT_INITIAL_AZIMUTH = Math.PI / 2;
-const ORBIT_MIN_DISTANCE = 2;
-const ORBIT_MAX_DISTANCE = 8;
+const ORBIT_MIN_DISTANCE = 3;
+const ORBIT_MAX_DISTANCE = 12;
 const ORBIT_MIN_POLAR = Math.PI * 0;
 const ORBIT_MAX_POLAR = Math.PI / 2;
 
@@ -77,7 +83,7 @@ const BACKGROUND_FADE_START = Math.max(
 );
 
 const TYPED_LINES = [
-  "> tina",
+  "> juliana",
   "...",
   "> today is your birthday",
   "...",
@@ -507,6 +513,18 @@ export default function App() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [hasStarted, hasAnimationCompleted, isCandleLit, playBackgroundMusic]);
 
+  const handleTouchOrClick = useCallback(() => {
+    if (!hasStarted) {
+      playBackgroundMusic();
+      setHasStarted(true);
+      return;
+    }
+    if (hasAnimationCompleted && isCandleLit) {
+      setIsCandleLit(false);
+      setFireworksActive(true);
+    }
+  }, [hasStarted, hasAnimationCompleted, isCandleLit, playBackgroundMusic]);
+
   const handleCardToggle = useCallback((id: string) => {
     setActiveCardId((current) => (current === id ? null : id));
   }, []);
@@ -514,11 +532,16 @@ export default function App() {
   const isScenePlaying = hasStarted && sceneStarted;
 
   return (
-    <div className="App">
+    <div className="App" onClick={handleTouchOrClick}>
       <div
         className="background-overlay"
         style={{ opacity: backgroundOpacity }}
       >
+        {!hasStarted && (
+           <div className="space-hint">
+             &gt; {isMobileDevice() ? "tap the screen" : "press space"} to start
+           </div>
+        )}
         <div className="typed-text">
           {typedLines.map((line, index) => {
             const showCursor =
