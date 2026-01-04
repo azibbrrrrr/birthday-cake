@@ -40,8 +40,9 @@ type AnimatedSceneProps = {
   candleLit: boolean;
   onAnimationComplete?: () => void;
   cards: ReadonlyArray<BirthdayCardConfig>;
-  activeCardId: string | null;
-  onToggleCard: (id: string) => void;
+  frames: ReadonlyArray<PictureFrameConfig>;
+  activeItemId: string | null;
+  onToggleItem: (id: string) => void;
 };
 
 const CAKE_START_Y = 10;
@@ -85,9 +86,11 @@ const BACKGROUND_FADE_START = Math.max(
 const TYPED_LINES = [
   "> juliana",
   "...",
-  "> today is your birthday",
+  "> since i cant meet you in person",
   "...",
-  "> so i made you this computer program",
+  "> welcome to our online dinner table hehe",
+  "...",
+  "> hope you enjoy this virtual meal",
   "...",
   "٩(◕‿◕)۶ ٩(◕‿◕)۶ ٩(◕‿◕)۶"
 ];
@@ -102,6 +105,14 @@ type BirthdayCardConfig = {
   rotation: [number, number, number];
 };
 
+type PictureFrameConfig = {
+  id: string;
+  image: string;
+  position: [number, number, number];
+  rotation: [number, number, number];
+  scale: number;
+};
+
 const BIRTHDAY_CARDS: ReadonlyArray<BirthdayCardConfig> = [
   {
     id: "confetti",
@@ -111,6 +122,37 @@ const BIRTHDAY_CARDS: ReadonlyArray<BirthdayCardConfig> = [
   }
 ];
 
+const PICTURE_FRAMES: ReadonlyArray<PictureFrameConfig> = [
+  {
+    id: "frame1",
+    image: "/frame2.jpg",
+    position: [0, 0.735, 3],
+    rotation: [0, 5.6, 0],
+    scale: 0.75,
+  },
+  {
+    id: "frame2",
+    image: "/frame3.jpg",
+    position: [0, 0.735, -3],
+    rotation: [0, 4.0, 0],
+    scale: 0.75,
+  },
+  {
+    id: "frame3",
+    image: "/frame4.jpg",
+    position: [-1.5, 0.735, 2.5],
+    rotation: [0, 5.4, 0],
+    scale: 0.75,
+  },
+  {
+    id: "frame4",
+    image: "/frame1.jpg",
+    position: [-1.5, 0.735, -2.5],
+    rotation: [0, 4.2, 0],
+    scale: 0.75,
+  },
+];
+
 function AnimatedScene({
   isPlaying,
   onBackgroundFadeChange,
@@ -118,8 +160,9 @@ function AnimatedScene({
   candleLit,
   onAnimationComplete,
   cards,
-  activeCardId,
-  onToggleCard,
+  frames,
+  activeItemId,
+  onToggleItem,
 }: AnimatedSceneProps) {
   const cakeGroup = useRef<Group>(null);
   const tableGroup = useRef<Group>(null);
@@ -271,30 +314,18 @@ function AnimatedScene({
     <>
       <group ref={tableGroup}>
         <Table />
-        <PictureFrame
-          image="/frame2.jpg"
-          position={[0, 0.735, 3]}
-          rotation={[0, 5.6, 0]}
-          scale={0.75}
-        />
-        <PictureFrame
-          image="/frame3.jpg"
-          position={[0, 0.735, -3]}
-          rotation={[0, 4.0, 0]}
-          scale={0.75}
-        />
-        <PictureFrame
-          image="/frame4.jpg"
-          position={[-1.5, 0.735, 2.5]}
-          rotation={[0, 5.4, 0]}
-          scale={0.75}
-        />
-        <PictureFrame
-          image="/frame1.jpg"
-          position={[-1.5, 0.735, -2.5]}
-          rotation={[0, 4.2, 0]}
-          scale={0.75}
-        />
+        {frames.map((frame) => (
+          <PictureFrame
+            key={frame.id}
+            id={frame.id}
+            image={frame.image}
+            tablePosition={frame.position}
+            tableRotation={frame.rotation}
+            scale={frame.scale}
+            isActive={activeItemId === frame.id}
+            onToggle={onToggleItem}
+          />
+        ))}
         {cards.map((card) => (
           <BirthdayCard
             key={card.id}
@@ -302,8 +333,8 @@ function AnimatedScene({
             image={card.image}
             tablePosition={card.position}
             tableRotation={card.rotation}
-            isActive={activeCardId === card.id}
-            onToggle={onToggleCard}
+            isActive={activeItemId === card.id}
+            onToggle={onToggleItem}
           />
         ))}
       </group>
@@ -383,7 +414,7 @@ export default function App() {
   const [hasAnimationCompleted, setHasAnimationCompleted] = useState(false);
   const [isCandleLit, setIsCandleLit] = useState(true);
   const [fireworksActive, setFireworksActive] = useState(false);
-  const [activeCardId, setActiveCardId] = useState<string | null>(null);
+  const [activeItemId, setActiveItemId] = useState<string | null>(null);
   const backgroundAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -525,8 +556,8 @@ export default function App() {
     }
   }, [hasStarted, hasAnimationCompleted, isCandleLit, playBackgroundMusic]);
 
-  const handleCardToggle = useCallback((id: string) => {
-    setActiveCardId((current) => (current === id ? null : id));
+  const handleItemToggle = useCallback((id: string) => {
+    setActiveItemId((current) => (current === id ? null : id));
   }, []);
 
   const isScenePlaying = hasStarted && sceneStarted;
@@ -539,7 +570,7 @@ export default function App() {
       >
         {!hasStarted && (
            <div className="space-hint">
-             &gt; {isMobileDevice() ? "tap the screen" : "press space"} to start
+             &gt; {isMobileDevice() ? "tap the screen" : "tap the screen"} to start
            </div>
         )}
         <div className="typed-text">
@@ -562,7 +593,7 @@ export default function App() {
         </div>
       </div>
       {hasAnimationCompleted && isCandleLit && (
-        <div className="hint-overlay">press space to blow out the candle</div>
+        <div className="hint-overlay">tap the screen to blow out the candle</div>
       )}
       <Canvas
         gl={{ alpha: true }}
@@ -579,8 +610,9 @@ export default function App() {
             onEnvironmentProgressChange={setEnvironmentProgress}
             onAnimationComplete={() => setHasAnimationCompleted(true)}
             cards={BIRTHDAY_CARDS}
-            activeCardId={activeCardId}
-            onToggleCard={handleCardToggle}
+            frames={PICTURE_FRAMES}
+            activeItemId={activeItemId}
+            onToggleItem={handleItemToggle}
           />
           <ambientLight intensity={(1 - environmentProgress) * 0.8} />
           <directionalLight intensity={0.5} position={[2, 10, 0]} color={[1, 0.9, 0.95]}/>
