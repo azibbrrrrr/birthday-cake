@@ -165,7 +165,7 @@ export function PictureFrame({
   const tmpPosition = useMemo(() => new Vector3(), []);
   const tmpQuaternion = useMemo(() => new Quaternion(), []);
   const tmpDirection = useMemo(() => new Vector3(), []);
-  const cameraOffset = useMemo(() => new Vector3(0, 0.10, 0), []);
+  const cameraOffset = useMemo(() => new Vector3(-0.5, 0.10, 0), []);
   const yFlipQuaternion = useMemo(() => new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), Math.PI), []);
   // Pitch correction to counteract the 0.04 radian forward tilt in the inner group
   const pitchCorrection = useMemo(() => new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -0.35), []);

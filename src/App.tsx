@@ -43,6 +43,7 @@ type AnimatedSceneProps = {
   frames: ReadonlyArray<PictureFrameConfig>;
   activeItemId: string | null;
   onToggleItem: (id: string) => void;
+  onCakeClick?: () => void;
 };
 
 const CAKE_START_Y = 10;
@@ -163,6 +164,7 @@ function AnimatedScene({
   frames,
   activeItemId,
   onToggleItem,
+  onCakeClick,
 }: AnimatedSceneProps) {
   const cakeGroup = useRef<Group>(null);
   const tableGroup = useRef<Group>(null);
@@ -339,7 +341,7 @@ function AnimatedScene({
         ))}
       </group>
       <group ref={cakeGroup}>
-        <Cake />
+        <Cake onClick={onCakeClick} />
       </group>
       <group ref={candleGroup}>
         <Candle isLit={candleLit} scale={0.25} position={[0, 1.1, 0]} />
@@ -560,6 +562,14 @@ export default function App() {
     setActiveItemId((current) => (current === id ? null : id));
   }, []);
 
+  const handleCakeClick = useCallback(() => {
+    // Only allow re-lighting if animation is complete and candle is blown out
+    if (hasAnimationCompleted && !isCandleLit) {
+      setIsCandleLit(true);
+      setFireworksActive(false);
+    }
+  }, [hasAnimationCompleted, isCandleLit]);
+
   const isScenePlaying = hasStarted && sceneStarted;
 
   return (
@@ -613,6 +623,7 @@ export default function App() {
             frames={PICTURE_FRAMES}
             activeItemId={activeItemId}
             onToggleItem={handleItemToggle}
+            onCakeClick={handleCakeClick}
           />
           <ambientLight intensity={(1 - environmentProgress) * 0.8} />
           <directionalLight intensity={0.5} position={[2, 10, 0]} color={[1, 0.9, 0.95]}/>
